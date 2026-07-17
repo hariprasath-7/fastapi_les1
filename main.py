@@ -1,7 +1,66 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
-app = FastAPI()
+app = FastAPI(title="Student CRUD API")
 
-@app.get("/")
-def read_root():
-    return { "status": "success", "message": "My FastAPI app is working!"}
+# Temporary database
+students = {}
+
+# Student Model
+class Student(BaseModel):
+    name: str
+    age: int
+    department: str
+
+
+# CREATE
+@app.post("/students/{student_id}")
+def create_student(student_id: int, student: Student):
+    if student_id in students:
+        raise HTTPException(status_code=400, detail="Student already exists")
+
+    students[student_id] = student
+    return {
+        "message": "Student created successfully",
+        "data": student
+    }
+
+
+# READ ALL
+@app.get("/students")
+def get_students():
+    return students
+
+
+# READ ONE
+@app.get("/students/{student_id}")
+def get_student(student_id: int):
+    if student_id not in students:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    return students[student_id]
+
+
+# UPDATE
+@app.put("/students/{student_id}")
+def update_student(student_id: int, student: Student):
+    if student_id not in students:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    students[student_id] = student
+    return {
+        "message": "Student updated successfully",
+        "data": student
+    }
+
+
+# DELETE
+@app.delete("/students/{student_id}")
+def delete_student(student_id: int):
+    if student_id not in students:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    del students[student_id]
+    return {
+        "message": "Student deleted successfully"
+    }
